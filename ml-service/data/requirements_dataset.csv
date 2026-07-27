@@ -1,0 +1,81 @@
+text,category
+User should be able to login with email and password,AUTHENTICATION
+Implement OAuth2 with Google and Facebook,AUTHENTICATION
+Password reset via email OTP,AUTHENTICATION
+Two-factor authentication using SMS,AUTHENTICATION
+Session management with JWT tokens,AUTHENTICATION
+Role-based access control for admin and user,AUTHENTICATION
+Lock account after 5 failed login attempts,AUTHENTICATION
+Single sign-on across company applications,AUTHENTICATION
+Display product listing with filters and sorting,FRONTEND
+Responsive design for mobile and tablet,FRONTEND
+Search bar with autocomplete suggestions,FRONTEND
+Dark mode and theme switching,FRONTEND
+Real-time notifications on the dashboard,FRONTEND
+Image carousel for product gallery,FRONTEND
+Drag and drop file upload interface,FRONTEND
+Multi-step form wizard for checkout,FRONTEND
+Process order and calculate total with discounts,BACKEND
+Generate PDF invoice after payment,BACKEND
+Schedule background jobs for report generation,BACKEND
+Implement rate limiting for API endpoints,BACKEND
+Webhook integration for third-party services,BACKEND
+Batch processing for bulk data import,BACKEND
+Business rule engine for discount calculation,BACKEND
+Queue based retry mechanism for failed jobs,BACKEND
+Store user profiles with address and preferences,DATABASE
+Product catalog with categories and variants,DATABASE
+Order history with status tracking,DATABASE
+Full-text search on product descriptions,DATABASE
+Audit log for all data modifications,DATABASE
+Data archival for records older than 2 years,DATABASE
+Cache frequently accessed data in memory,DATABASE
+Normalize schema to reduce data duplication,DATABASE
+Deploy application on AWS with auto-scaling,CLOUD
+Use S3 for file and image storage,CLOUD
+Set up CloudFront CDN for static assets,CLOUD
+Kubernetes cluster for container orchestration,CLOUD
+Multi-region deployment for disaster recovery,CLOUD
+Infrastructure as code using Terraform,CLOUD
+Serverless functions for event processing,CLOUD
+Auto scale containers based on CPU usage,CLOUD
+Process credit card payments via Stripe,PAYMENT
+Integrate PayPal as payment option,PAYMENT
+Subscription billing with recurring charges,PAYMENT
+Refund processing and dispute management,PAYMENT
+Split payments between multiple vendors,PAYMENT
+Digital wallet top-up and withdrawal,PAYMENT
+Invoice generation for B2B customers,PAYMENT
+Support multiple currencies at checkout,PAYMENT
+Send email notifications for order updates,NOTIFICATION
+Push notifications for mobile app,NOTIFICATION
+SMS alerts for delivery status,NOTIFICATION
+In-app notification center with read/unread,NOTIFICATION
+Scheduled newsletter emails,NOTIFICATION
+WhatsApp integration for customer support,NOTIFICATION
+Real-time chat notifications,NOTIFICATION
+Digest email summarizing weekly activity,NOTIFICATION
+Recommend products based on purchase history,RECOMMENDATION
+Collaborative filtering for similar users,RECOMMENDATION
+Content-based filtering for item similarity,RECOMMENDATION
+Personalized home feed based on preferences,RECOMMENDATION
+Recently viewed items suggestions,RECOMMENDATION
+Trending products based on popularity,RECOMMENDATION
+AI-powered search with relevance ranking,RECOMMENDATION
+Suggest related items at checkout,RECOMMENDATION
+Dashboard with sales and revenue charts,ANALYTICS
+User engagement metrics and retention,ANALYTICS
+Funnel analysis for conversion tracking,ANALYTICS
+A/B testing framework for feature experiments,ANALYTICS
+Real-time monitoring of system performance,ANALYTICS
+Custom report builder for business users,ANALYTICS
+Export analytics data to CSV and Excel,ANALYTICS
+Cohort analysis for user retention,ANALYTICS
+REST API integration with shipping providers,INTEGRATION
+Sync inventory with ERP system,INTEGRATION
+Single sign-on with enterprise LDAP,INTEGRATION
+Import data from legacy systems,INTEGRATION
+Connect with CRM for customer management,INTEGRATION
+API gateway for third-party developer access,INTEGRATION
+Webhook listeners for external events,INTEGRATION
+Sync calendar events with Google Calendar,INTEGRATION
