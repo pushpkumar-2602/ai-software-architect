@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: architect-db
+    environment:
+      POSTGRES_DB: ai_software_architect
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ml-service:
+    build: ./ml-service
+    container_name: architect-ml
+    ports:
+      - "8000:8000"
+
+  backend:
+    build: ./backend
+    container_name: architect-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_software_architect
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      - postgres
+      - ml-service
+
+  frontend:
+    build: ./frontend
+    container_name: architect-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
