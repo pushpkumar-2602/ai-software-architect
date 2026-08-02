@@ -1,4 +1,5 @@
-import { useState } from 'react'
+
+import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
@@ -37,6 +38,21 @@ function App() {
       setLoading(false)
     }
   }
+  const agentSteps = [
+    'Requirement Analyst is reading your idea...',
+    'System Architect is designing the pattern...',
+    'Database Architect is modeling your schema...',
+    'DevOps Planner is estimating the timeline...',
+  ]
+  const [stepIndex, setStepIndex] = useState(0)
+
+  useEffect(() => {
+    if (!loading) return
+    const interval = setInterval(() => {
+      setStepIndex((prev) => (prev + 1) % agentSteps.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [loading])
 
   return (
     <div className="App">
@@ -65,9 +81,24 @@ function App() {
           <option value="ENTERPRISE">Enterprise (10M+ users)</option>
         </select>
 
+
+
         <button onClick={handleGenerate} disabled={loading}>
-          {loading ? 'Generating... (this takes ~20 seconds)' : 'Generate Architecture'}
+          {loading ? 'Working...' : 'Generate Architecture'}
         </button>
+
+        {loading && (
+        <div className="agent-loader">
+          <div className="agent-dots">
+            <span className="dot dot1"></span>
+            <span className="dot dot2"></span>
+            <span className="dot dot3"></span>
+            <span className="dot dot4"></span>
+          </div>
+          <p className="agent-text">{agentSteps[stepIndex]}</p>
+        </div>
+      )}
+      
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
