@@ -8,10 +8,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.architect.backend.agent.DatabaseArchitectAgent;
 import com.architect.backend.agent.DevOpsPlannerAgent;
+import com.architect.backend.agent.DiagramAgent;
 import com.architect.backend.agent.RequirementAnalystAgent;
 import com.architect.backend.agent.SystemArchitectAgent;
+import com.architect.backend.config.DiagramTypeRegistry;
 import com.architect.backend.entity.ArchitectureResult;
+import com.architect.backend.entity.Diagram;
 import com.architect.backend.entity.Project;
+import com.architect.backend.repository.DiagramRepository;
 import com.architect.backend.repository.ProjectRepository;
 import com.architect.backend.service.GeminiService;
 import com.architect.backend.service.MlServiceClient;
@@ -29,12 +33,14 @@ public class HelloController {
     private final DatabaseArchitectAgent databaseArchitectAgent;
     private final DevOpsPlannerAgent devOpsPlannerAgent;
     private final OrchestrationService orchestrationService;
+    private final DiagramAgent diagramAgent;
+    private final DiagramRepository diagramRepository;
 
    public HelloController(MlServiceClient mlServiceClient, ProjectRepository projectRepository,
                             GeminiService geminiService, RequirementAnalystAgent requirementAnalystAgent,
                             SystemArchitectAgent systemArchitectAgent, DatabaseArchitectAgent databaseArchitectAgent,
                             DevOpsPlannerAgent devOpsPlannerAgent,
-                            OrchestrationService orchestrationService) {
+                            OrchestrationService orchestrationService,DiagramAgent diagramAgent,DiagramRepository diagramRepository) {
         this.mlServiceClient = mlServiceClient;
         this.projectRepository = projectRepository;
         this.geminiService = geminiService;
@@ -43,6 +49,8 @@ public class HelloController {
         this.databaseArchitectAgent = databaseArchitectAgent;
         this.devOpsPlannerAgent = devOpsPlannerAgent;
         this.orchestrationService = orchestrationService;
+        this.diagramAgent=diagramAgent;
+        this.diagramRepository=diagramRepository;
     }
 
     @GetMapping("/")
@@ -99,6 +107,27 @@ public class HelloController {
     public ArchitectureResult generateArchitecture(@PathVariable java.util.UUID id) {
         Project project = getProjectOrThrow(id);
         return orchestrationService.generateFullArchitecture(project);
+    }
+    
+        @PostMapping("/projects/{id}/diagrams/{type}")
+    public Diagram generateDiagram(@PathVariable java.util.UUID id, @PathVariable String type) {
+        Project project = getProjectOrThrow(id);
+
+        DiagramTypeRegistry.DiagramSpec spec = DiagramTypeRegistry.TYPES.get(type);
+        if (spec == null) {
+            throw new RuntimeException("Unknown diagram type: " + type);
+        }
+
+        String mermaidCode = diagramAgent.generateDiagram(
+                spec.displayName(), spec.syntaxGuide(),
+                project.getDescription(), project.getExpectedUsers());
+
+        Diagram diagram = new Diagram();
+        diagram.setProject(project);
+        diagram.setDiagramType(type);
+        diagram.setMermaidCode(mermaidCode);
+
+        return diagramRepository.save(diagram);
     }
 
     @GetMapping("/test-gemini")
