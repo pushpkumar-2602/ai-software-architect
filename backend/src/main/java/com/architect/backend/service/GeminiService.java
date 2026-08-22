@@ -20,25 +20,46 @@ public class GeminiService {
                 .build();
     }
 
-    public String generate(String prompt) {
-        Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt)
-                        ))
-                )
-        );
+       public String generate(String prompt) {
+        int maxRetries = 3;
+        int waitSeconds = 2;
 
-        Map response = webClient.post()
-                .uri("?key=" + apiKey)
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                Map<String, Object> requestBody = Map.of(
+                        "contents", List.of(
+                                Map.of("parts", List.of(
+                                        Map.of("text", prompt)
+                                ))
+                        )
+                );
 
-        return extractText(response);
+                Map response = webClient.post()
+                        .uri("?key=" + apiKey)
+                        .bodyValue(requestBody)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+
+                return extractText(response);
+
+            } catch (org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests e) {
+                if (attempt == maxRetries) {
+                    throw new RuntimeException(
+                        "Gemini rate limit exceeded after " + maxRetries + " attempts. " +
+                        "Please wait a minute before trying again.", e);
+                }
+                try {
+                    Thread.sleep(waitSeconds * 1000L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                waitSeconds *= 2; // exponential backoff: 2s, 4s, 8s
+            }
+        }
+
+        throw new RuntimeException("Unreachable");
     }
-
     @SuppressWarnings("unchecked")
     private String extractText(Map response) {
         List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");

@@ -153,3 +153,69 @@ h1 {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.diagram-section {
+  margin-top: 40px;
+}
+
+.diagram-section h2 {
+  font-size: 1.1rem;
+  color: #7dd3fc;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #262a36;
+  padding-bottom: 8px;
+}
+
+.diagram-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.diagram-btn {
+  background: #171923;
+  border: 1px solid #2c303c;
+  color: #d1d5db;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.diagram-btn:hover:not(:disabled) {
+  border-color: #7dd3fc;
+  color: #7dd3fc;
+}
+
+.diagram-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.diagram-block {
+  background: #171923;
+  border: 1px solid #262a36;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.diagram-block h3 {
+  font-size: 0.95rem;
+  color: #a78bfa;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.diagram-container {
+  display: flex;
+  justify-content: center;
+}
+
+.diagram-container svg {
+  max-width: 100%;
+  height: auto;
+}

@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react'
+import DiagramViewer from './DiagramViewer'
 import './App.css'
 
 function App() {
@@ -9,42 +9,37 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [diagrams, setDiagrams] = useState({})
+  const [diagramLoading, setDiagramLoading] = useState(null)
+  const [stepIndex, setStepIndex] = useState(0)
 
-  const handleGenerate = async () => {
-    setLoading(true)
-    setError(null)
-    setResult(null)
-
-    try {
-      // Step 1: create the project
-      const createResponse = await fetch('http://localhost:8080/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectName, description, expectedUsers }),
-      })
-      const project = await createResponse.json()
-
-      // Step 2: run all 4 AI agents on that project
-      const generateResponse = await fetch(
-        `http://localhost:8080/projects/${project.id}/generate`,
-        { method: 'POST' }
-      )
-      const architectureResult = await generateResponse.json()
-
-      setResult(architectureResult)
-    } catch (err) {
-      setError('Something went wrong: ' + err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
   const agentSteps = [
     'Requirement Analyst is reading your idea...',
     'System Architect is designing the pattern...',
     'Database Architect is modeling your schema...',
     'DevOps Planner is estimating the timeline...',
   ]
-  const [stepIndex, setStepIndex] = useState(0)
+
+  const diagramTypes = [
+    { key: 'system-architecture', label: 'System Architecture' },
+    { key: 'er-diagram', label: 'ER Diagram' },
+    { key: 'use-case', label: 'Use Case Diagram' },
+    { key: 'sequence-main-flow', label: 'Sequence Diagram' },
+    { key: 'class-diagram', label: 'Class Diagram' },
+    { key: 'activity-diagram', label: 'Activity Diagram' },
+    { key: 'state-diagram', label: 'State Diagram' },
+    { key: 'component-diagram', label: 'Component Diagram' },
+    { key: 'deployment-diagram', label: 'Deployment Diagram' },
+    { key: 'dfd-context', label: 'Data Flow Diagram' },
+    { key: 'microservices-communication', label: 'Microservices Comm.' },
+    { key: 'network-architecture', label: 'Network Architecture' },
+    { key: 'security-architecture', label: 'Security Architecture' },
+    { key: 'cicd-pipeline', label: 'CI/CD Pipeline' },
+    { key: 'sdlc-workflow', label: 'SDLC Workflow' },
+    { key: 'user-journey', label: 'User Journey' },
+    { key: 'api-interaction', label: 'API Interaction' },
+    { key: 'infrastructure-diagram', label: 'Infrastructure' },
+  ]
 
   useEffect(() => {
     if (!loading) return
@@ -53,6 +48,67 @@ function App() {
     }, 4000)
     return () => clearInterval(interval)
   }, [loading])
+
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setDiagrams({})
+
+    try {
+      const createResponse = await fetch('http://localhost:8080/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectName, description, expectedUsers }),
+      })
+
+      if (!createResponse.ok) {
+        throw new Error(`Could not create project (status ${createResponse.status})`)
+      }
+
+      const project = await createResponse.json()
+
+      const generateResponse = await fetch(
+        `http://localhost:8080/projects/${project.id}/generate`,
+        { method: 'POST' }
+      )
+
+      if (!generateResponse.ok) {
+        throw new Error(
+          `Generation failed (status ${generateResponse.status}). The AI service may be rate-limited — wait a minute and try again.`
+        )
+      }
+
+      const architectureResult = await generateResponse.json()
+      setResult(architectureResult)
+    } catch (err) {
+      setError('Something went wrong: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGenerateDiagram = async (type) => {
+    if (!result?.project?.id) return
+    setDiagramLoading(type)
+    try {
+      const res = await fetch(
+        `http://localhost:8080/projects/${result.project.id}/diagrams/${type}`,
+        { method: 'POST' }
+      )
+
+      if (!res.ok) {
+        throw new Error(`Diagram generation failed (status ${res.status})`)
+      }
+
+      const data = await res.json()
+      setDiagrams((prev) => ({ ...prev, [type]: data.mermaidCode }))
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setDiagramLoading(null)
+    }
+  }
 
   return (
     <div className="App">
@@ -81,24 +137,21 @@ function App() {
           <option value="ENTERPRISE">Enterprise (10M+ users)</option>
         </select>
 
-
-
         <button onClick={handleGenerate} disabled={loading}>
           {loading ? 'Working...' : 'Generate Architecture'}
         </button>
 
         {loading && (
-        <div className="agent-loader">
-          <div className="agent-dots">
-            <span className="dot dot1"></span>
-            <span className="dot dot2"></span>
-            <span className="dot dot3"></span>
-            <span className="dot dot4"></span>
+          <div className="agent-loader">
+            <div className="agent-dots">
+              <span className="dot dot1"></span>
+              <span className="dot dot2"></span>
+              <span className="dot dot3"></span>
+              <span className="dot dot4"></span>
+            </div>
+            <p className="agent-text">{agentSteps[stepIndex]}</p>
           </div>
-          <p className="agent-text">{agentSteps[stepIndex]}</p>
-        </div>
-      )}
-      
+        )}
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -116,6 +169,33 @@ function App() {
 
           <h2>DevOps Plan</h2>
           <pre>{result.devops}</pre>
+        </div>
+      )}
+
+      {result && (
+        <div className="diagram-section">
+          <h2>Engineering Diagrams</h2>
+          <div className="diagram-buttons">
+            {diagramTypes.map((d) => (
+              <button
+                key={d.key}
+                className="diagram-btn"
+                onClick={() => handleGenerateDiagram(d.key)}
+                disabled={diagramLoading === d.key}
+              >
+                {diagramLoading === d.key ? '...' : d.label}
+              </button>
+            ))}
+          </div>
+
+          {diagramTypes.map((d) =>
+            diagrams[d.key] ? (
+              <div key={d.key} className="diagram-block">
+                <h3>{d.label}</h3>
+                <DiagramViewer code={diagrams[d.key]} />
+              </div>
+            ) : null
+          )}
         </div>
       )}
     </div>
