@@ -109,7 +109,7 @@ public class HelloController {
         return orchestrationService.generateFullArchitecture(project);
     }
     
-        @PostMapping("/projects/{id}/diagrams/{type}")
+    @PostMapping("/projects/{id}/diagrams/{type}")
     public Diagram generateDiagram(@PathVariable java.util.UUID id, @PathVariable String type) {
         Project project = getProjectOrThrow(id);
 
@@ -128,6 +128,11 @@ public class HelloController {
         diagram.setMermaidCode(mermaidCode);
 
         return diagramRepository.save(diagram);
+    }
+
+    @GetMapping("/projects/{id}/diagrams")
+    public java.util.List<Diagram> getProjectDiagrams(@PathVariable java.util.UUID id) {
+        return diagramRepository.findByProjectId(id);
     }
 
     @GetMapping("/test-gemini")

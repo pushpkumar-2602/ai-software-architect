@@ -41,13 +41,28 @@ function App() {
     { key: 'infrastructure-diagram', label: 'Infrastructure' },
   ]
 
-  useEffect(() => {
+   useEffect(() => {
     if (!loading) return
     const interval = setInterval(() => {
       setStepIndex((prev) => (prev + 1) % agentSteps.length)
     }, 4000)
     return () => clearInterval(interval)
   }, [loading])
+
+  useEffect(() => {
+    if (!result?.project?.id) return
+
+    fetch(`http://localhost:8080/projects/${result.project.id}/diagrams`)
+      .then((res) => res.json())
+      .then((existingDiagrams) => {
+        const diagramMap = {}
+        existingDiagrams.forEach((d) => {
+          diagramMap[d.diagramType] = d.mermaidCode
+        })
+        setDiagrams(diagramMap)
+      })
+      .catch((err) => console.error('Could not load existing diagrams:', err))
+  }, [result])
 
   const handleGenerate = async () => {
     setLoading(true)
