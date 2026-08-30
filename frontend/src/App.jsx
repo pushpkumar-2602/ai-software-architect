@@ -3,6 +3,7 @@ import DiagramViewer from './DiagramViewer'
 import './App.css'
 
 function App() {
+  const [view, setView] = useState('create') // 'create' | 'history'
   const [projectName, setProjectName] = useState('')
   const [description, setDescription] = useState('')
   const [expectedUsers, setExpectedUsers] = useState('MEDIUM')
@@ -12,6 +13,10 @@ function App() {
   const [diagrams, setDiagrams] = useState({})
   const [diagramLoading, setDiagramLoading] = useState(null)
   const [stepIndex, setStepIndex] = useState(0)
+
+  const [historyList, setHistoryList] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState(null)
 
   const agentSteps = [
     'Requirement Analyst is reading your idea...',
@@ -41,28 +46,13 @@ function App() {
     { key: 'infrastructure-diagram', label: 'Infrastructure' },
   ]
 
-   useEffect(() => {
+  useEffect(() => {
     if (!loading) return
     const interval = setInterval(() => {
       setStepIndex((prev) => (prev + 1) % agentSteps.length)
     }, 4000)
     return () => clearInterval(interval)
   }, [loading])
-
-  useEffect(() => {
-    if (!result?.project?.id) return
-
-    fetch(`http://localhost:8080/projects/${result.project.id}/diagrams`)
-      .then((res) => res.json())
-      .then((existingDiagrams) => {
-        const diagramMap = {}
-        existingDiagrams.forEach((d) => {
-          diagramMap[d.diagramType] = d.mermaidCode
-        })
-        setDiagrams(diagramMap)
-      })
-      .catch((err) => console.error('Could not load existing diagrams:', err))
-  }, [result])
 
   const handleGenerate = async () => {
     setLoading(true)
@@ -125,53 +115,153 @@ function App() {
     }
   }
 
+  const openHistory = async () => {
+    setView('history')
+    setHistoryLoading(true)
+    setHistoryError(null)
+    try {
+      const res = await fetch('http://localhost:8080/projects')
+      if (!res.ok) throw new Error(`Could not load projects (status ${res.status})`)
+      const data = await res.json()
+      data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      setHistoryList(data)
+    } catch (err) {
+      setHistoryError(err.message)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  const loadProjectFromHistory = async (projectId) => {
+    setLoading(true)
+    setError(null)
+    setDiagrams({})
+
+    try {
+      const [resultRes, diagramsRes] = await Promise.all([
+        fetch(`http://localhost:8080/projects/${projectId}/result`),
+        fetch(`http://localhost:8080/projects/${projectId}/diagrams`),
+      ])
+
+      if (!resultRes.ok) throw new Error('Could not load this project\'s result')
+
+      const savedResult = await resultRes.json()
+
+      if (!savedResult) {
+        setError('This project was created but architecture was never generated for it.')
+        setResult(null)
+        setView('create')
+        return
+      }
+
+      const savedDiagrams = diagramsRes.ok ? await diagramsRes.json() : []
+      const diagramMap = {}
+      savedDiagrams.forEach((d) => {
+        diagramMap[d.diagramType] = d.mermaidCode
+      })
+
+      setResult(savedResult)
+      setDiagrams(diagramMap)
+      setView('create')
+    } catch (err) {
+      setError('Something went wrong loading this project: ' + err.message)
+      setView('create')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="App">
-      <h1>AI Software Architect</h1>
+      <div className="nav-row">
+        <h1>AI Software Architect</h1>
+        <div className="nav-buttons">
+          <button
+            className={`nav-btn ${view === 'create' ? 'nav-btn-active' : ''}`}
+            onClick={() => setView('create')}
+          >
+            New Project
+          </button>
+          <button
+            className={`nav-btn ${view === 'history' ? 'nav-btn-active' : ''}`}
+            onClick={openHistory}
+          >
+            History
+          </button>
+        </div>
+      </div>
       <p>Describe your project idea and get an AI-generated architecture.</p>
 
-      <div className="form">
-        <input
-          type="text"
-          placeholder="Project name"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-        />
-
-        <textarea
-          placeholder="Describe your project idea..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={5}
-        />
-
-        <select value={expectedUsers} onChange={(e) => setExpectedUsers(e.target.value)}>
-          <option value="SMALL">Small (~100 users)</option>
-          <option value="MEDIUM">Medium (~10,000 users)</option>
-          <option value="LARGE">Large (~1,000,000 users)</option>
-          <option value="ENTERPRISE">Enterprise (10M+ users)</option>
-        </select>
-
-        <button onClick={handleGenerate} disabled={loading}>
-          {loading ? 'Working...' : 'Generate Architecture'}
-        </button>
-
-        {loading && (
-          <div className="agent-loader">
-            <div className="agent-dots">
-              <span className="dot dot1"></span>
-              <span className="dot dot2"></span>
-              <span className="dot dot3"></span>
-              <span className="dot dot4"></span>
+      {view === 'history' && (
+        <div className="history-list">
+          {historyLoading && <p className="agent-text">Loading past projects...</p>}
+          {historyError && <p style={{ color: '#f87171' }}>{historyError}</p>}
+          {!historyLoading && historyList.length === 0 && (
+            <p className="agent-text">No projects yet — create one to see it here.</p>
+          )}
+          {historyList.map((p) => (
+            <div
+              key={p.id}
+              className="history-item"
+              onClick={() => loadProjectFromHistory(p.id)}
+            >
+              <div className="history-item-header">
+                <span className="history-item-name">{p.projectName || '(untitled)'}</span>
+                <span className="history-item-scale">{p.expectedUsers}</span>
+              </div>
+              <p className="history-item-desc">{p.description}</p>
+              <span className="history-item-date">
+                {new Date(p.createdAt).toLocaleString()}
+              </span>
             </div>
-            <p className="agent-text">{agentSteps[stepIndex]}</p>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {view === 'create' && (
+        <div className="form">
+          <input
+            type="text"
+            placeholder="Project name"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+          />
+
+          <textarea
+            placeholder="Describe your project idea..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={5}
+          />
+
+          <select value={expectedUsers} onChange={(e) => setExpectedUsers(e.target.value)}>
+            <option value="SMALL">Small (~100 users)</option>
+            <option value="MEDIUM">Medium (~10,000 users)</option>
+            <option value="LARGE">Large (~1,000,000 users)</option>
+            <option value="ENTERPRISE">Enterprise (10M+ users)</option>
+          </select>
+
+          <button onClick={handleGenerate} disabled={loading}>
+            {loading ? 'Working...' : 'Generate Architecture'}
+          </button>
+
+          {loading && (
+            <div className="agent-loader">
+              <div className="agent-dots">
+                <span className="dot dot1"></span>
+                <span className="dot dot2"></span>
+                <span className="dot dot3"></span>
+                <span className="dot dot4"></span>
+              </div>
+              <p className="agent-text">{agentSteps[stepIndex]}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {result && (
+      {result && view === 'create' && (
         <div className="results">
           <h2>Requirements</h2>
           <pre>{result.requirements}</pre>
@@ -187,7 +277,7 @@ function App() {
         </div>
       )}
 
-      {result && (
+      {result && view === 'create' && (
         <div className="diagram-section">
           <h2>Engineering Diagrams</h2>
           <div className="diagram-buttons">

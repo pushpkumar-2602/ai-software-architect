@@ -15,6 +15,7 @@ import com.architect.backend.config.DiagramTypeRegistry;
 import com.architect.backend.entity.ArchitectureResult;
 import com.architect.backend.entity.Diagram;
 import com.architect.backend.entity.Project;
+import com.architect.backend.repository.ArchitectureResultRepository;
 import com.architect.backend.repository.DiagramRepository;
 import com.architect.backend.repository.ProjectRepository;
 import com.architect.backend.service.GeminiService;
@@ -35,12 +36,13 @@ public class HelloController {
     private final OrchestrationService orchestrationService;
     private final DiagramAgent diagramAgent;
     private final DiagramRepository diagramRepository;
+    private final ArchitectureResultRepository architectureResultRepository;
 
    public HelloController(MlServiceClient mlServiceClient, ProjectRepository projectRepository,
                             GeminiService geminiService, RequirementAnalystAgent requirementAnalystAgent,
                             SystemArchitectAgent systemArchitectAgent, DatabaseArchitectAgent databaseArchitectAgent,
                             DevOpsPlannerAgent devOpsPlannerAgent,
-                            OrchestrationService orchestrationService,DiagramAgent diagramAgent,DiagramRepository diagramRepository) {
+                            OrchestrationService orchestrationService,DiagramAgent diagramAgent,DiagramRepository diagramRepository,ArchitectureResultRepository architectureResultRepository) {
         this.mlServiceClient = mlServiceClient;
         this.projectRepository = projectRepository;
         this.geminiService = geminiService;
@@ -51,6 +53,7 @@ public class HelloController {
         this.orchestrationService = orchestrationService;
         this.diagramAgent=diagramAgent;
         this.diagramRepository=diagramRepository;
+        this.architectureResultRepository=architectureResultRepository;
     }
 
     @GetMapping("/")
@@ -129,6 +132,11 @@ public class HelloController {
 
         return diagramRepository.save(diagram);
     }
+    @GetMapping("/projects/{id}/result")
+    public ArchitectureResult getProjectResult(@PathVariable java.util.UUID id) {
+        return architectureResultRepository.findByProjectId(id)
+                .orElse(null);
+    }
 
     @GetMapping("/projects/{id}/diagrams")
     public java.util.List<Diagram> getProjectDiagrams(@PathVariable java.util.UUID id) {
@@ -139,6 +147,8 @@ public class HelloController {
     public String testGemini() {
         return geminiService.generate("Say hello in exactly 5 words.");
     }
+    
+
 
     private Project getProjectOrThrow(java.util.UUID id) {
         return projectRepository.findById(id)
