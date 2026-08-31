@@ -297,7 +297,7 @@ function App() {
             diagrams[d.key] ? (
               <div key={d.key} className="diagram-block">
                 <h3>{d.label}</h3>
-                <DiagramViewer code={diagrams[d.key]} />
+                <DiagramViewer code={diagrams[d.key]} label={d.label} />
               </div>
             ) : null
           )}

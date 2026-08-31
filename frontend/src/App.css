@@ -308,3 +308,19 @@ h1 {
   font-size: 0.75rem;
   color: #6b7280;
 }
+.download-btn {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid #2c303c;
+  color: #9aa0ac;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.download-btn:hover {
+  border-color: #a78bfa;
+  color: #a78bfa;
+}
