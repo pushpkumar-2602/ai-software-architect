@@ -1,5 +1,6 @@
 package com.architect.backend.controller;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -147,7 +148,14 @@ public class HelloController {
     public String testGemini() {
         return geminiService.generate("Say hello in exactly 5 words.");
     }
-    
+    @DeleteMapping("/projects/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteProject(@PathVariable java.util.UUID id) {
+        diagramRepository.deleteByProjectId(id);
+        architectureResultRepository.findByProjectId(id)
+                .ifPresent(architectureResultRepository::delete);
+        projectRepository.deleteById(id);
+    }
 
 
     private Project getProjectOrThrow(java.util.UUID id) {

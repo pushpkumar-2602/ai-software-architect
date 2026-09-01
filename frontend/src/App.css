@@ -324,3 +324,24 @@ h1 {
   border-color: #a78bfa;
   color: #a78bfa;
 }
+.history-item-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.delete-btn {
+  background: transparent;
+  border: 1px solid #4b2020;
+  color: #f87171;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.delete-btn:hover {
+  background: #2a1414;
+  border-color: #f87171;
+}

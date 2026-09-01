@@ -131,6 +131,21 @@ function App() {
       setHistoryLoading(false)
     }
   }
+  const handleDeleteProject = async (e, projectId) => {
+    e.stopPropagation() // don't trigger loadProjectFromHistory when clicking delete
+    if (!confirm('Delete this project and all its generated content? This cannot be undone.')) {
+      return
+    }
+    try {
+      const res = await fetch(`http://localhost:8080/projects/${projectId}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error(`Delete failed (status ${res.status})`)
+      setHistoryList((prev) => prev.filter((p) => p.id !== projectId))
+    } catch (err) {
+      alert(err.message)
+    }
+  }
 
   const loadProjectFromHistory = async (projectId) => {
     setLoading(true)
@@ -207,7 +222,15 @@ function App() {
             >
               <div className="history-item-header">
                 <span className="history-item-name">{p.projectName || '(untitled)'}</span>
-                <span className="history-item-scale">{p.expectedUsers}</span>
+                <div className="history-item-header-right">
+                  <span className="history-item-scale">{p.expectedUsers}</span>
+                  <button
+                    className="delete-btn"
+                    onClick={(e) => handleDeleteProject(e, p.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
               <p className="history-item-desc">{p.description}</p>
               <span className="history-item-date">
@@ -292,6 +315,7 @@ function App() {
               </button>
             ))}
           </div>
+      
 
           {diagramTypes.map((d) =>
             diagrams[d.key] ? (
