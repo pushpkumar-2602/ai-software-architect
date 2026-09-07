@@ -154,48 +154,55 @@ function App() {
       alert(err.message);
     }
   };
-
   const loadProjectFromHistory = async (projectId) => {
-    setLoading(true);
-    setError(null);
-    setDiagrams({});
+  setLoading(true);
+  setError(null);
+  setDiagrams({});
 
-    try {
-      const [resultRes, diagramsRes] = await Promise.all([
+  try {
+    const [resultRes, diagramsRes] = await Promise.all([
       fetch(`${API_URL}/projects/${projectId}/result`),
       fetch(`${API_URL}/projects/${projectId}/diagrams`),
     ]);
 
-      if (!resultRes.ok)
-        throw new Error("Could not load this project's result");
-
-      const savedResult = await resultRes.json();
-
-      if (!savedResult) {
-        setError(
-          "This project was created but architecture was never generated for it.",
-        );
-        setResult(null);
-        setView("create");
-        return;
-      }
-
-      const savedDiagrams = diagramsRes.ok ? await diagramsRes.json() : [];
-      const diagramMap = {};
-      savedDiagrams.forEach((d) => {
-        diagramMap[d.diagramType] = d.mermaidCode;
-      });
-
-      setResult(savedResult);
-      setDiagrams(diagramMap);
-      setView("create");
-    } catch (err) {
-      setError("Something went wrong loading this project: " + err.message);
-      setView("create");
-    } finally {
-      setLoading(false);
+    if (!resultRes.ok) {
+      throw new Error("Could not load this project's result");
     }
-  };
+
+    const resultText = await resultRes.text();
+    const savedResult = resultText ? JSON.parse(resultText) : null;
+
+    if (!savedResult) {
+      setError(
+        "This project was created but architecture was never generated for it."
+      );
+      setResult(null);
+      setView("create");
+      return;
+    }
+
+    const savedDiagrams = diagramsRes.ok
+      ? await diagramsRes.json()
+      : [];
+
+    const diagramMap = {};
+
+    savedDiagrams.forEach((d) => {
+      diagramMap[d.diagramType] = d.mermaidCode;
+    });
+
+    setResult(savedResult);
+    setDiagrams(diagramMap);
+    setView("create");
+  } catch (err) {
+    setError(
+      "Something went wrong loading this project: " + err.message
+    );
+    setView("create");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="App">
