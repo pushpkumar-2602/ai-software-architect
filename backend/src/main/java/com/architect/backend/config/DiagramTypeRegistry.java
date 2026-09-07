@@ -106,8 +106,17 @@ public class DiagramTypeRegistry {
 
         TYPES.put("user-journey", new DiagramSpec(
                 "User Journey Diagram",
-                "Use Mermaid journey syntax. Show the primary user's journey through the " +
-                "product as a sequence of tasks with satisfaction scores."
+                "Use Mermaid journey syntax EXACTLY in this shape, with no deviations:\n" +
+                "journey\n" +
+                "    title A short title\n" +
+                "    section Section Name\n" +
+                "      Task name: 5: Actor\n" +
+                "      Another task: 3: Actor\n" +
+                "    section Another Section\n" +
+                "      Task name: 4: Actor\n" +
+                "Every line under a section MUST be a task line in the format " +
+                "'Task name: score: Actor' where score is 1-5. Never leave a section " +
+                "with no task lines under it."
         ));
 
         TYPES.put("api-interaction", new DiagramSpec(
