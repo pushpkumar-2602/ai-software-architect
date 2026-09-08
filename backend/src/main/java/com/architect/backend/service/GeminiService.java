@@ -21,8 +21,8 @@ public class GeminiService {
     }
 
        public String generate(String prompt) {
-        int maxRetries = 3;
-        int waitSeconds = 2;
+        int maxRetries = 6;
+        int waitSeconds = 4;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {

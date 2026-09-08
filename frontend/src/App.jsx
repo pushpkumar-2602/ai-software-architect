@@ -336,7 +336,7 @@ function App() {
                 key={d.key}
                 className="diagram-btn"
                 onClick={() => handleGenerateDiagram(d.key)}
-                disabled={diagramLoading === d.key}
+                disabled={diagramLoading !== null}
               >
                 {diagramLoading === d.key ? "..." : d.label}
               </button>
