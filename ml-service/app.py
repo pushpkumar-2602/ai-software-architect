@@ -14,19 +14,19 @@ from typing import List, Optional
 import uvicorn
 
 from classifier.predict import RequirementClassifier
-from rag.vector_store import ArchitectureVectorStore
+
 
 # ============================================================
 # Global component holders
 # ============================================================
 classifier: Optional[RequirementClassifier] = None
-vector_store: Optional[ArchitectureVectorStore] = None
+
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize ML model and vector store on startup."""
-    global classifier, vector_store
+    global classifier
 
     try:
         classifier = RequirementClassifier()
@@ -35,8 +35,7 @@ async def lifespan(app: FastAPI):
         print("WARNING: Classifier model not found. "
               "Run 'python classifier/train.py' first.")
 
-    vector_store = ArchitectureVectorStore()
-    print("Vector store initialized successfully")
+   
 
     yield
     # (no teardown needed)
@@ -68,17 +67,6 @@ class ClassifyResponse(BaseModel):
 
 class BatchClassifyRequest(BaseModel):
     texts: List[str]
-
-
-class RagQueryRequest(BaseModel):
-    query: str
-    scale: str
-    top_k: Optional[int] = 5
-
-
-class RagQueryResponse(BaseModel):
-    patterns: List[str]
-
 
 # ============================================================
 # Endpoints
@@ -116,36 +104,12 @@ async def classify_batch(request: BatchClassifyRequest):
     results = classifier.predict_batch(request.texts)
     return {"classifications": results}
 
-
-@app.post("/rag/query", response_model=RagQueryResponse)
-async def query_patterns(request: RagQueryRequest):
-    """
-    Queries the vector database for relevant
-    architectural patterns based on project description
-    and scale level.
-    """
-    if vector_store is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Vector store not initialized."
-        )
-
-    patterns = vector_store.query(
-        query_text=request.query,
-        scale=request.scale,
-        top_k=request.top_k
-    )
-
-    return RagQueryResponse(patterns=patterns)
-
-
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "classifier_loaded": classifier is not None,
-        "vector_store_loaded": vector_store is not None
+        "classifier_loaded": classifier is not None
     }
 
 
